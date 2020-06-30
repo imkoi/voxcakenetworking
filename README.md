@@ -4,6 +4,8 @@ Currenty unusable :)
 ### Usage example
 Server-side example
 ``` csharp
+using VoxCake.Networking;
+
 public class ServerExample
 {
     private const string ProtocolHashKey = "protocol_hash";
@@ -32,6 +34,8 @@ public class ServerExample
 
 Client-side example
 ``` csharp
+using VoxCake.Networking;
+
 public class ClientExample
 {
     private const string ProtocolHashKey = "protocol_hash";
@@ -63,6 +67,8 @@ public class ClientExample
 ```
 
 ``` csharp
+using VoxCake.Networking;
+
 public class ProtocolExample : Protocol
 {
     protected override Packet[] Packets => _packets;
@@ -75,6 +81,8 @@ public class ProtocolExample : Protocol
 ```
 
 ``` csharp
+using VoxCake.Networking;
+
 public class PacketExample : Packet
 {
     public override PacketType Type => PacketType.Reliable;
