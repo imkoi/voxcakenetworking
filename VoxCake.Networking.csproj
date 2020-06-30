@@ -58,9 +58,6 @@
     <Compile Include="Source\Common\Serialization\NetworkSerializer.cs" />
     <Compile Include="Source\Common\Serialization\PacketDeserializer.cs" />
     <Compile Include="Source\Common\Serialization\PacketSerializer.cs" />
-    <Compile Include="Source\Common\Workers\PacketReceiver.cs" />
-    <Compile Include="Source\Common\Workers\PacketSender.cs" />
-    <Compile Include="Source\Common\Workers\Worker.cs" />
     <Compile Include="Source\Packets\Packet.cs" />
     <Compile Include="Source\Packets\PacketVariableBinder.cs" />
     <Compile Include="Source\Packets\PacketVariableGetter.cs" />

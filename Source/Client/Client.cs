@@ -104,14 +104,14 @@ namespace VoxCake.Networking
                     {
                         case PacketType.Reliable:
                             await _stream.WriteAsync(packet.data, 0, packet.Size);
+                            VoxCakeDebugger.LogInfo($"Packet \"{packetName}\" sended to {_serverEndPoint.Address} via TCP protocol");
                             break;
                         case PacketType.Unreliable:
                             await _udpClient.SendAsync(packet.data, packet.Size, _serverEndPoint);
+                            VoxCakeDebugger.LogInfo($"Packet \"{packetName}\" sended to {_serverEndPoint.Address} via UDP protocol");
                             break;
                     }
                 }
-
-                VoxCakeDebugger.LogInfo($"Packet \"{packetName}\" sended to {_serverEndPoint.Address} via UDP protocol");
             }
             else
             {
@@ -233,6 +233,26 @@ namespace VoxCake.Networking
             {
                 await _stream.WriteAsync(rawData, 0, rawData.Length);
             }
+        }
+
+        private async void SendTCPDataToServer()
+        {
+
+        }
+
+        private async void SendUDPDataToServer()
+        {
+
+        }
+
+        private async void ReceiveTCPDataFromServer()
+        {
+
+        }
+
+        private async void ReceiveUDPDataFromServer()
+        {
+
         }
     }
 }

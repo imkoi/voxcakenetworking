@@ -50,10 +50,6 @@ namespace VoxCake.Networking
             
                 RegisterClients();
 
-                var delay = 1000 / _info.TickRate;
-                SendData(delay);
-                ReceiveData(delay);
-
                 VoxCakeDebugger.LogInfo("Server is running");
                 OnServerReady?.Invoke();
             }
@@ -127,18 +123,6 @@ namespace VoxCake.Networking
                 await Task.Delay(delay);
             }
         }
-
-        private async void ReceiveData(int delay)
-        {
-            while (_isRunning)
-            {
-                var clientResponse = await _udpClient.ReceiveAsync();
-                var clientId = clientResponse.Buffer[0];
-                Console.WriteLine($"Recieved UDP response from client[{clientId}]");
-
-                await Task.Delay(delay);
-            }
-        }
         
         private async void RegisterClients()
         {
@@ -175,6 +159,10 @@ namespace VoxCake.Networking
 
                     client.Id = clientId;
                     _clients.Add(clientId, client);
+
+                    ReceiveTCPDataFromClient(client, clientStream);
+                    ReceiveUDPDataFromClient(client, clientTcp.Client.LocalEndPoint);
+
                     VoxCakeDebugger.LogInfo($"Client[{client.Id}] is connected to server");
                 }
                 else
@@ -182,6 +170,50 @@ namespace VoxCake.Networking
                     client.Disconnect(DisconnectReasonType.ClientIsInvalid);
                 }
             }
+        }
+
+        private async void ReceiveTCPDataFromClient(IClient client, NetworkStream clientStream)
+        {
+            var clientId = client.Id;
+
+            while (_clients.ContainsKey(clientId))
+            {
+                var rawClientResponse = new byte[256];
+                await clientStream.ReadAsync(rawClientResponse, 0, 256);
+
+                if (rawClientResponse[0] == 0)
+                {
+                    client.Disconnect(DisconnectReasonType.Leave);
+                    _clients.Remove(clientId);
+
+                    VoxCakeDebugger.LogInfo($"Client[{clientId}] disconnected from server");
+                    break;
+                }
+
+                var packet = _protocol.GetPacketById(rawClientResponse[0]);
+                packet.SetSenderId(clientId);
+
+                VoxCakeDebugger.LogInfo($"Received packet \"{packet.GetType().Name}\" from client[{clientId}]");
+            }
+        }
+
+        private async void ReceiveUDPDataFromClient(IClient client, EndPoint clientEndpoint)
+        {
+            var udpClient = new UdpClient();
+            udpClient.Client.Bind(clientEndpoint);
+
+            while (_clients.ContainsKey(client.Id))
+            {
+                var rawClientResponseResult = await udpClient.ReceiveAsync();
+                var rawClientResponse = rawClientResponseResult.Buffer;
+
+                var packet = _protocol.GetPacketById(rawClientResponse[0]);
+                packet.SetSenderId(client.Id);
+
+                VoxCakeDebugger.LogInfo($"Received packet \"{packet.GetType().Name}\" from client[{client.Id}]");
+            }
+
+            udpClient.Close();
         }
     }
 }
