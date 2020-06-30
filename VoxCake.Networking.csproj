@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{5E7CAA67-11F2-4A17-BBFA-B1E1F89BF25C}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>VoxCake.Networking</RootNamespace>
+    <AssemblyName>VoxCake.Networking</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
+      <HintPath>..\..\Newtonsoft\netstandard2.0\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Client\Client.cs" />
+    <Compile Include="Client\IClient.cs" />
+    <Compile Include="Client\RemoteClient.cs" />
+    <Compile Include="Common\Dtos\ClientInfoDto.cs" />
+    <Compile Include="Common\Dtos\ClientRegistrationDto.cs" />
+    <Compile Include="Common\Dtos\ServerInfoDto.cs" />
+    <Compile Include="Common\Serialization\NetworkSerializer.cs" />
+    <Compile Include="Common\Serialization\PacketDeserializer.cs" />
+    <Compile Include="Common\Serialization\PacketSerializer.cs" />
+    <Compile Include="Server\ServerInfo.cs" />
+    <Compile Include="Common\Workers\Worker.cs" />
+    <Compile Include="Common\Workers\PacketReceiver.cs" />
+    <Compile Include="Common\Workers\PacketSender.cs" />
+    <Compile Include="Packets\Packet.cs" />
+    <Compile Include="Packets\PacketVariableBinder.cs" />
+    <Compile Include="Packets\PacketVariableGetter.cs" />
+    <Compile Include="Packets\PacketVariableSetter.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Content Include="README.md" />
+    <Compile Include="Protocol\Protocol.cs" />
+    <Compile Include="Server\IServer.cs" />
+    <Compile Include="Server\Server.cs" />
+    <Compile Include="Types\ClientModeType.cs" />
+    <Compile Include="Types\DisconnectReasonType.cs" />
+    <Compile Include="Types\PacketType.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="NetworkProtocol.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\AceServer\VoxCake.Common\VoxCake.Common.csproj">
+      <Project>{c7efb332-f55e-4242-83d6-5f7191e0f2d6}</Project>
+      <Name>VoxCake.Common</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+         Other similar extension points exist, see Microsoft.Common.targets.
+    <Target Name="BeforeBuild">
+    </Target>
+    <Target Name="AfterBuild">
+    </Target>
+    -->
+</Project>
