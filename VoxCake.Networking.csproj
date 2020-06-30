@@ -42,8 +42,7 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="VoxCake.Common, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="VoxCake.Common">
       <HintPath>..\voxcakecommon\bin\Debug\netstandard2.0\VoxCake.Common.dll</HintPath>
     </Reference>
   </ItemGroup>
