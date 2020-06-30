@@ -2,6 +2,7 @@
 Currenty unusable :)
 
 ### Usage example
+Server-side example
 ``` csharp
 public class ServerExample
 {
@@ -27,7 +28,10 @@ public class ServerExample
         return clientProtocolHash == serverProtocolHash;
     }
 }
+```
 
+Client-side example
+``` csharp
 public class ClientExample
 {
     private const string ProtocolHashKey = "protocol_hash";
@@ -56,7 +60,9 @@ public class ClientExample
         _client.Disconnect(disconnectReason);
     }
 }
+```
 
+``` csharp
 public class ProtocolExample : Protocol
 {
     protected override Packet[] Packets => _packets;
@@ -66,7 +72,9 @@ public class ProtocolExample : Protocol
         new PacketExample()
     };
 }
+```
 
+``` csharp
 public class PacketExample : Packet
 {
     public override PacketType Type => PacketType.Reliable;
