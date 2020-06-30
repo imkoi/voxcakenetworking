@@ -44,40 +44,34 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Client\Client.cs" />
-    <Compile Include="Client\IClient.cs" />
-    <Compile Include="Client\RemoteClient.cs" />
-    <Compile Include="Common\Dtos\ClientInfoDto.cs" />
-    <Compile Include="Common\Dtos\ClientRegistrationDto.cs" />
-    <Compile Include="Common\Dtos\ServerInfoDto.cs" />
-    <Compile Include="Common\Serialization\NetworkSerializer.cs" />
-    <Compile Include="Common\Serialization\PacketDeserializer.cs" />
-    <Compile Include="Common\Serialization\PacketSerializer.cs" />
-    <Compile Include="Server\ServerInfo.cs" />
-    <Compile Include="Common\Workers\Worker.cs" />
-    <Compile Include="Common\Workers\PacketReceiver.cs" />
-    <Compile Include="Common\Workers\PacketSender.cs" />
-    <Compile Include="Packets\Packet.cs" />
-    <Compile Include="Packets\PacketVariableBinder.cs" />
-    <Compile Include="Packets\PacketVariableGetter.cs" />
-    <Compile Include="Packets\PacketVariableSetter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Content Include="README.md" />
-    <Compile Include="Protocol\Protocol.cs" />
-    <Compile Include="Server\IServer.cs" />
-    <Compile Include="Server\Server.cs" />
-    <Compile Include="Types\ClientModeType.cs" />
-    <Compile Include="Types\DisconnectReasonType.cs" />
-    <Compile Include="Types\PacketType.cs" />
+    <Compile Include="Source\Client\Client.cs" />
+    <Compile Include="Source\Client\IClient.cs" />
+    <Compile Include="Source\Client\RemoteClient.cs" />
+    <Compile Include="Source\Common\Dtos\ClientInfoDto.cs" />
+    <Compile Include="Source\Common\Dtos\ClientRegistrationDto.cs" />
+    <Compile Include="Source\Common\Dtos\ServerInfoDto.cs" />
+    <Compile Include="Source\Common\Serialization\NetworkSerializer.cs" />
+    <Compile Include="Source\Common\Serialization\PacketDeserializer.cs" />
+    <Compile Include="Source\Common\Serialization\PacketSerializer.cs" />
+    <Compile Include="Source\Common\Workers\PacketReceiver.cs" />
+    <Compile Include="Source\Common\Workers\PacketSender.cs" />
+    <Compile Include="Source\Common\Workers\Worker.cs" />
+    <Compile Include="Source\Packets\Packet.cs" />
+    <Compile Include="Source\Packets\PacketVariableBinder.cs" />
+    <Compile Include="Source\Packets\PacketVariableGetter.cs" />
+    <Compile Include="Source\Packets\PacketVariableSetter.cs" />
+    <Compile Include="Source\Protocol\Protocol.cs" />
+    <Compile Include="Source\Server\IServer.cs" />
+    <Compile Include="Source\Server\Server.cs" />
+    <Compile Include="Source\Server\ServerInfo.cs" />
+    <Compile Include="Source\Types\ClientModeType.cs" />
+    <Compile Include="Source\Types\DisconnectReasonType.cs" />
+    <Compile Include="Source\Types\PacketType.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="NetworkProtocol.md" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\AceServer\VoxCake.Common\VoxCake.Common.csproj">
-      <Project>{c7efb332-f55e-4242-83d6-5f7191e0f2d6}</Project>
-      <Name>VoxCake.Common</Name>
-    </ProjectReference>
+    <None Include="Docs\NetworkProtocol.md" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
