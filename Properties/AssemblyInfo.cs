@@ -4,11 +4,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("VoxCake.Net")]
+[assembly: AssemblyTitle("VoxCake.Networking")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("VoxCake")]
-[assembly: AssemblyProduct("VoxCake.Net")]
+[assembly: AssemblyProduct("VoxCake.Networking")]
 [assembly: AssemblyCopyright("VoxCake ©  2020")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
