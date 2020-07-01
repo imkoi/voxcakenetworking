@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 using VoxCake.Common;
 using VoxCake.Networking.Common;
@@ -10,7 +13,7 @@ namespace VoxCake.Networking
     internal class RemoteClient : IClient
     {
         public byte Id { get; internal set; }
-        public bool IsMine => false;
+        bool IClient.IsMine => false;
 
         public event Action<ServerInfo> OnConnected;
         public event Action<DisconnectReasonType> OnDisconnected;
@@ -22,14 +25,15 @@ namespace VoxCake.Networking
 
         internal Dictionary<string, object> properties;
 
-        internal RemoteClient(TcpClient tcpClient, NetworkStream clientStream, Protocol protocol)
+        internal RemoteClient(TcpClient tcpClient, Protocol protocol)
         {
             _tcpClient = tcpClient;
-            _stream = clientStream;
+            _udpClient = new UdpClient((IPEndPoint)_tcpClient.Client.LocalEndPoint);
+            _stream = tcpClient.GetStream();
             _protocol = protocol;
         }
 
-        public void Connect<T>(ServerInfo serverInfo) where T : Protocol, new()
+        void IClient.Connect<T>(ServerInfo serverInfo)
         {
             VoxCakeDebugger.LogWarning("Remote client already connected to server!");
         }
@@ -65,7 +69,7 @@ namespace VoxCake.Networking
             return NetworkSerializer.Deserialize<T>(rawServerResponse);
         }
 
-        public T GetProperty<T>(string key) where T : new()
+        T IClient.GetProperty<T>(string key)
         {
             if (properties.ContainsKey(key))
             {
@@ -90,9 +94,42 @@ namespace VoxCake.Networking
         public void Disconnect(DisconnectReasonType disconnectReason)
         {
             _stream?.Close();
+            _stream?.Dispose();
+
             _tcpClient?.Close();
+            _tcpClient?.Dispose();
+
             _udpClient?.Close();
+            _udpClient?.Dispose();
+
             OnDisconnected?.Invoke(disconnectReason);
+        }
+
+        public async Task<Packet[]> ReceiveTcpPackets(byte clientId)
+        {
+            var clientResponse = new byte[256];
+            await _stream.ReadAsync(clientResponse, 0, 256);
+
+            if (clientResponse[0] == 0)
+            {
+                return null;
+            }
+
+            var packet = _protocol.GetPacketById(clientResponse[0]);
+            packet.SetSenderId(clientId);
+
+            return new Packet[] { packet };
+        }
+
+        public async Task<Packet[]> ReceiveUdpPackets(byte clientId)
+        {
+            var clientResponseResult = await _udpClient.ReceiveAsync();
+            var clientResponse = clientResponseResult.Buffer;
+
+            var packet = _protocol.GetPacketById(clientResponse[0]);
+            packet.SetSenderId(clientId);
+
+            return new Packet[] { packet };
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
@@ -24,10 +25,12 @@ namespace VoxCake.Networking
         private IPEndPoint _serverEndPoint;
         private NetworkStream _stream;
         private Protocol _protocol;
-        private bool _isConnected;
+        private bool _isConnectedToServer;
         private bool _isRunning;
         private bool _isMine;
         private ClientModeType _clientMode;
+        private List<Packet> _tcpPacketsToSend;
+        private List<Packet> _udpPacketsToSend;
 
         internal EndPoint Ip => _tcpClient.Client.RemoteEndPoint;
         internal Dictionary<string, object> properties;
@@ -36,9 +39,15 @@ namespace VoxCake.Networking
         {
             _clientMode = clientMode;
             _isMine = true;
-            OnConnected += serverInfo => { _isConnected = true; };
-            OnDisconnected += reason => { _isConnected = false; };
+            OnConnected += serverInfo => 
+            {
+                _isConnectedToServer = true;
+                SendPacketsToServer(serverInfo.TickRate);
+            };
+            OnDisconnected += reason => { _isConnectedToServer = false; };
 
+            _tcpPacketsToSend = new List<Packet>();
+            _udpPacketsToSend = new List<Packet>();
             properties = new Dictionary<string, object>();
 
             if (clientMode == ClientModeType.Online)
@@ -50,7 +59,7 @@ namespace VoxCake.Networking
 
         async void IClient.Connect<T>(ServerInfo serverInfo)
         {
-            if (!_isConnected)
+            if (!_isConnectedToServer)
             {
                 _isRunning = true;
 
@@ -88,11 +97,11 @@ namespace VoxCake.Networking
             }
         }
 
-        async Task IClient.Send<T>(params object[] data)
+        Task IClient.Send<T>(params object[] data)
         {
             var packetName = typeof(T).Name;
 
-            if (_isConnected)
+            if (_isConnectedToServer)
             {
                 var packet = _protocol.GetPacket<T>();
                 packet.SetSenderId(Id);
@@ -103,12 +112,10 @@ namespace VoxCake.Networking
                     switch (packet.Type)
                     {
                         case PacketType.Reliable:
-                            await _stream.WriteAsync(packet.data, 0, packet.Size);
-                            VoxCakeDebugger.LogInfo($"Packet \"{packetName}\" sended to {_serverEndPoint.Address} via TCP protocol");
+                            _tcpPacketsToSend.Add(packet);
                             break;
                         case PacketType.Unreliable:
-                            await _udpClient.SendAsync(packet.data, packet.Size, _serverEndPoint);
-                            VoxCakeDebugger.LogInfo($"Packet \"{packetName}\" sended to {_serverEndPoint.Address} via UDP protocol");
+                            _udpPacketsToSend.Add(packet);
                             break;
                     }
                 }
@@ -117,13 +124,15 @@ namespace VoxCake.Networking
             {
                 VoxCakeDebugger.LogWarning($"Cannot send {packetName} because you are not connected to any server!");
             }
+
+            return Task.CompletedTask;
         }
 
         async Task IClient.SendData(object data)
         {
             var dataName = data.GetType().Name;
 
-            if (_isConnected)
+            if (_isConnectedToServer)
             {
                 await SendData(data);
                 VoxCakeDebugger.LogInfo($"Data \"{dataName}\" sended to {_serverEndPoint.Address} via TCP protocol");
@@ -138,7 +147,7 @@ namespace VoxCake.Networking
         {
             var data = new T();
 
-            if (_isConnected)
+            if (_isConnectedToServer)
             {
                 data = await ReceiveData<T>();
 
@@ -178,7 +187,7 @@ namespace VoxCake.Networking
             _udpClient?.Close();
             OnDisconnected?.Invoke(disconnectReason);
 
-            _isConnected = false;
+            _isConnectedToServer = false;
             _isRunning = false;
         }
 
@@ -235,24 +244,39 @@ namespace VoxCake.Networking
             }
         }
 
-        private async void SendTCPDataToServer()
+        private async void SendPacketsToServer(int tickRate)
         {
+            var sendDelayMs = 1000 / tickRate;
+            var timer = new Stopwatch();
 
-        }
+            while (_isConnectedToServer)
+            {
+                timer.Restart();
 
-        private async void SendUDPDataToServer()
-        {
+                var mergedTcpPackets = new byte[16];
+                var mergedTcpPacketsLength = mergedTcpPackets.Length;
+                if (mergedTcpPacketsLength > 0)
+                {
+                    await _stream.WriteAsync(mergedTcpPackets, 0, mergedTcpPacketsLength);
+                    VoxCakeDebugger.LogInfo($"Packets sended to {_serverEndPoint.Address} via TCP protocol");
+                }
 
-        }
+                var mergedUdpPackets = new byte[16];
+                var mergedUdpPacketsLength = mergedUdpPackets.Length;
+                if (mergedUdpPacketsLength > 0)
+                {
+                    await _udpClient.SendAsync(mergedUdpPackets, mergedUdpPacketsLength, _serverEndPoint);
+                    VoxCakeDebugger.LogInfo($"Packets sended to {_serverEndPoint.Address} via UDP protocol");
+                }
 
-        private async void ReceiveTCPDataFromServer()
-        {
+                timer.Stop();
 
-        }
-
-        private async void ReceiveUDPDataFromServer()
-        {
-
+                var timeLoss = sendDelayMs - (int)timer.ElapsedMilliseconds;
+                if(timeLoss > 0)
+                {
+                    await Task.Delay(timeLoss);
+                }
+            }
         }
     }
 }

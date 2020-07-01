@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.Remoting.Channels;
 using System.Threading.Tasks;
 using VoxCake.Common;
 using VoxCake.Networking.Common;
@@ -131,14 +132,11 @@ namespace VoxCake.Networking
             while (_isRunning)
             {
                 var clientTcp = await _tcpListener.AcceptTcpClientAsync();
-                var clientStream = clientTcp.GetStream();
             
-                var client = new RemoteClient(clientTcp, clientStream, _protocol);
+                var client = new RemoteClient(clientTcp, _protocol);
 
                 var clientInfo = await client.ReceiveData<ClientInfoDto>();
                 client.properties = clientInfo.properties;
-
-                VoxCakeDebugger.LogInfo($"{client == null}");
 
                 var clientIsValid = _clientValidation?.Invoke(client) ?? true;
                 if (clientIsValid)
@@ -159,11 +157,9 @@ namespace VoxCake.Networking
 
                     client.Id = clientId;
                     _clients.Add(clientId, client);
-
-                    ReceiveTCPDataFromClient(client, clientStream);
-                    ReceiveUDPDataFromClient(client, clientTcp.Client.LocalEndPoint);
-
                     VoxCakeDebugger.LogInfo($"Client[{client.Id}] is connected to server");
+
+                    HandleClient(client);
                 }
                 else
                 {
@@ -172,48 +168,51 @@ namespace VoxCake.Networking
             }
         }
 
-        private async void ReceiveTCPDataFromClient(IClient client, NetworkStream clientStream)
+        private void HandleClient(RemoteClient client)
         {
             var clientId = client.Id;
+            
+            ReceiveTcpPackets(client, clientId);
+            ReceiveUdpPackets(client, clientId);
+        }
 
+        private async void ReceiveTcpPackets(RemoteClient client, byte clientId)
+        {
             while (_clients.ContainsKey(clientId))
             {
-                var rawClientResponse = new byte[256];
-                await clientStream.ReadAsync(rawClientResponse, 0, 256);
-
-                if (rawClientResponse[0] == 0)
+                var tcpPackets = await client.ReceiveTcpPackets(clientId);
+                if (tcpPackets == null)
                 {
                     client.Disconnect(DisconnectReasonType.Leave);
                     _clients.Remove(clientId);
 
                     VoxCakeDebugger.LogInfo($"Client[{clientId}] disconnected from server");
-                    break;
                 }
-
-                var packet = _protocol.GetPacketById(rawClientResponse[0]);
-                packet.SetSenderId(clientId);
-
-                VoxCakeDebugger.LogInfo($"Received packet \"{packet.GetType().Name}\" from client[{clientId}]");
+                else
+                {
+                    foreach (var packet in tcpPackets)
+                    {
+                        VoxCakeDebugger.LogInfo($"Received packet \"{packet.GetType().Name}\" from client[{clientId}]");
+                    }
+                }
             }
         }
 
-        private async void ReceiveUDPDataFromClient(IClient client, EndPoint clientEndpoint)
+        private async void ReceiveUdpPackets(RemoteClient client, byte clientId)
         {
-            var udpClient = new UdpClient();
-            udpClient.Client.Bind(clientEndpoint);
-
-            while (_clients.ContainsKey(client.Id))
+            while (_clients.ContainsKey(clientId))
             {
-                var rawClientResponseResult = await udpClient.ReceiveAsync();
-                var rawClientResponse = rawClientResponseResult.Buffer;
+                try 
+                {
+                    var udpPackets = await client.ReceiveUdpPackets(clientId);
 
-                var packet = _protocol.GetPacketById(rawClientResponse[0]);
-                packet.SetSenderId(client.Id);
-
-                VoxCakeDebugger.LogInfo($"Received packet \"{packet.GetType().Name}\" from client[{client.Id}]");
+                    foreach (var packet in udpPackets)
+                    {
+                        VoxCakeDebugger.LogInfo($"Received packet \"{packet.GetType().Name}\" from client[{clientId}]");
+                    }
+                }
+                catch { }
             }
-
-            udpClient.Close();
         }
     }
 }
