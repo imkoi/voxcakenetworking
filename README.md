@@ -2,6 +2,37 @@
 Currenty unusable :)
 
 ### Usage example
+For usage in Unity you should implement logger
+``` csharp
+public class UnityLogger : ILogger
+{
+    void ILogger.Log(object message)
+    {
+        Debug.Log($"Log: {message}");
+    }
+
+    void ILogger.Warning(object message)
+    {
+        Debug.LogWarning($"Warning: {message}");
+    }
+
+    void ILogger.Error(object message)
+    {
+        Debug.LogError($"Error: {message}");
+    }
+}
+
+public class Bootstrapper : MonoBehaviour
+{
+	private void Awake()
+	{
+		VoxCakeDebugger.Logger = new UnityLogger();
+		
+		//Usage of VoxCake libraries...
+	}
+}
+```
+
 Server-side example
 ``` csharp
 using VoxCake.Networking;
