@@ -21,7 +21,7 @@ namespace VoxCake.Networking
         public event Action<DisconnectReasonType> OnDisconnected;
 
         private readonly TcpClient _tcpClient;
-        private readonly UdpClient _udpClient;
+        private UdpClient _udpClient;
         private IPEndPoint _serverEndPoint;
         private NetworkStream _stream;
         private Protocol _protocol;
@@ -39,21 +39,28 @@ namespace VoxCake.Networking
         {
             _clientMode = clientMode;
             _isMine = true;
+
             OnConnected += serverInfo => 
             {
                 _isConnectedToServer = true;
-                SendPacketsToServer(serverInfo.TickRate);
+                if(clientMode == ClientModeType.Online)
+                {
+                    _udpClient = new UdpClient(_serverEndPoint);
+
+                    SendPacketsToServer(serverInfo.TickRate, serverInfo.MaxTcpPacketSize, serverInfo.MaxUdpPacketSize);
+                    ReceivePacketsFromServer(serverInfo.MaxTcpPacketSize);
+                }
             };
             OnDisconnected += reason => { _isConnectedToServer = false; };
 
-            _tcpPacketsToSend = new List<Packet>();
-            _udpPacketsToSend = new List<Packet>();
             properties = new Dictionary<string, object>();
 
             if (clientMode == ClientModeType.Online)
             {
+                _tcpPacketsToSend = new List<Packet>();
+                _udpPacketsToSend = new List<Packet>();
+
                 _tcpClient = new TcpClient();
-                _udpClient = new UdpClient();
             }
         }
 
@@ -244,7 +251,7 @@ namespace VoxCake.Networking
             }
         }
 
-        private async void SendPacketsToServer(int tickRate)
+        private async void SendPacketsToServer(int tickRate, int maxTcpPacketSize, int maxUdpPacketSize)
         {
             var sendDelayMs = 1000 / tickRate;
             var timer = new Stopwatch();
@@ -253,7 +260,7 @@ namespace VoxCake.Networking
             {
                 timer.Restart();
 
-                var mergedTcpPackets = new byte[16];
+                var mergedTcpPackets = PacketMerger.GetMergedPacketsData(_tcpPacketsToSend, maxTcpPacketSize);
                 var mergedTcpPacketsLength = mergedTcpPackets.Length;
                 if (mergedTcpPacketsLength > 0)
                 {
@@ -261,7 +268,7 @@ namespace VoxCake.Networking
                     VoxCakeDebugger.LogInfo($"Packets sended to {_serverEndPoint.Address} via TCP protocol");
                 }
 
-                var mergedUdpPackets = new byte[16];
+                var mergedUdpPackets = PacketMerger.GetMergedPacketsData(_udpPacketsToSend, maxUdpPacketSize);
                 var mergedUdpPacketsLength = mergedUdpPackets.Length;
                 if (mergedUdpPacketsLength > 0)
                 {
@@ -275,6 +282,44 @@ namespace VoxCake.Networking
                 if(timeLoss > 0)
                 {
                     await Task.Delay(timeLoss);
+                }
+            }
+        }
+
+        private void ReceivePacketsFromServer(int maxTcpPacketSize)
+        {
+            ReceiveTcpPackets(maxTcpPacketSize);
+            ReceiveUdpPackets();
+        }
+
+        private async void ReceiveTcpPackets(int maxTcpPacketSize)
+        {
+            while (_isConnectedToServer)
+            {
+                var rawServerResponse = new byte[maxTcpPacketSize];
+                await _stream.ReadAsync(rawServerResponse, 0, maxTcpPacketSize);
+
+                var packets = PacketMerger.GetPacketsByData(rawServerResponse, _protocol, Id);
+
+                foreach(var packet in packets)
+                {
+                    VoxCakeDebugger.LogInfo($"Received packet \"{packet.GetType().Name}\" via TCP protocol");
+                }
+            }
+        }
+
+        private async void ReceiveUdpPackets()
+        {
+            while (_isConnectedToServer)
+            {
+                var rawServerResponseResult = await _udpClient.ReceiveAsync();
+                var rawServerResponse = rawServerResponseResult.Buffer;
+
+                var packets = PacketMerger.GetPacketsByData(rawServerResponse, _protocol, Id);
+
+                foreach (var packet in packets)
+                {
+                    VoxCakeDebugger.LogInfo($"Received packet \"{packet.GetType().Name}\" via TCP protocol");
                 }
             }
         }

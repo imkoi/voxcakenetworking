@@ -151,7 +151,9 @@ namespace VoxCake.Networking
                             ip = _info.Ip,
                             port = _info.Port,
                             tickRate = _info.TickRate,
-                            properties = _properties
+                            properties = _properties,
+                            maxTcpPacketSize = _info.MaxTcpPacketSize,
+                            maxUdpPacketSize = _info.MaxUdpPacketSize
                         }
                     });
 

@@ -5,6 +5,8 @@ namespace VoxCake.Networking
 {
     public abstract class Packet
     {
+        public static int MaxPacketSize = 255;
+
         public byte Id { get; internal set; }
         public byte SenderId { get; internal set; }
         public int Size { get; internal set; }

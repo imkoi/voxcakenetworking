@@ -9,6 +9,8 @@ namespace VoxCake.Networking.Common
         public string ip;
         public int port;
         public int tickRate;
+        public int maxTcpPacketSize;
+        public int maxUdpPacketSize;
         public Dictionary<string, object> properties;
         
         public override string ToString()
